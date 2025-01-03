@@ -1,2 +1,0 @@
-# soundboard
-Use Chrome!
