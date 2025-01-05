@@ -143,9 +143,35 @@
       border: 1px solid #ddd;
       cursor: pointer;
     }
+    .banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #ffeb3b;
+      padding: 10px;
+      text-align: center;
+      font-size: 16px;
+      display: none;
+      z-index: 1000;
+    }
+    .banner button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      border: none;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+
+<div class="banner" id="reloadBanner">
+  Reload all audio files or reset?
+  <button id="reloadButton">Reload</button>
+  <button id="resetButton">Reset</button>
+</div>
 
 <div class="container" id="soundboard"></div>
 
@@ -163,9 +189,51 @@
   const soundboard = document.getElementById('soundboard');
   const deviceSelector = document.getElementById('deviceSelector');
   const unlockButton = document.getElementById('unlockDeviceSelector');
+  const reloadBanner = document.getElementById('reloadBanner');
+  const reloadButton = document.getElementById('reloadButton');
+  const resetButton = document.getElementById('resetButton');
   const savedSettings = JSON.parse(localStorage.getItem('soundboardSettings')) || {};
   const savedDevice = localStorage.getItem('selectedAudioDevice') || 'default';
 
+  let missingFiles = false;
+
+  // Show reload/reset banner if files are missing
+  function checkMissingFiles() {
+    for (let i = 0; i < 8; i++) {
+      if (savedSettings[i]?.handle && !savedSettings[i]?.fileUrl) {
+        missingFiles = true;
+        break;
+      }
+    }
+    if (missingFiles) {
+      reloadBanner.style.display = 'block';
+    }
+  }
+
+  reloadButton.addEventListener('click', async () => {
+    reloadBanner.style.display = 'none';
+    for (let i = 0; i < 8; i++) {
+      if (savedSettings[i]?.handle && !savedSettings[i]?.fileUrl) {
+        try {
+          const fileHandle = savedSettings[i].handle;
+          const file = await fileHandle.getFile();
+          const url = URL.createObjectURL(file);
+
+          savedSettings[i].fileUrl = url;
+          localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
+        } catch (err) {
+          console.error('Error reloading file:', err);
+        }
+      }
+    }
+    location.reload();
+  });
+
+  resetButton.addEventListener('click', () => {
+    reloadBanner.style.display = 'none';
+    localStorage.removeItem('soundboardSettings');
+    location.reload();
+  });
 
   // Handle device selector unlocking
   unlockButton.addEventListener('click', () => {
@@ -247,51 +315,36 @@
     soundboard.appendChild(slot);
 
     // Audio handling
-// Audio handling
     let audio = null;
     let interval = null;
-    let currentFileHandle = null;
 
     // Load saved audio if it exists
     async function loadSavedAudio() {
-      if (savedSettings[i]?.handle) {
+      if (savedSettings[i]?.fileUrl) {
         try {
-          // Request permission to access the file
-          const handle = savedSettings[i].handle;
-          // Verify we can access the file
-          const permission = await handle.queryPermission({ mode: 'read' });
-          
-          if (permission === 'granted') {
-            const file = await handle.getFile();
-            const url = URL.createObjectURL(file);
-            
-            if (audio) {
-              audio.pause();
-              URL.revokeObjectURL(audio.src);
-            }
-            
-            audio = new Audio(url);
-            audio.volume = volumeInput.value / 100;
-            playButton.disabled = false;
-            
-          } else {
-            // If we don't have permission, try to request it
-            const newPermission = await handle.requestPermission({ mode: 'read' });
-            if (newPermission === 'granted') {
-              await loadSavedAudio();
-            } else {
-              console.log('Permission denied for file access');
-              playButton.disabled = true;
-              slotLabel.textContent = `F${i + 5}: Permission denied`;
-              delete savedSettings[i].handle;
-              localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
-            }
+          const fileHandle = savedSettings[i].handle;
+          const file = await fileHandle.getFile();
+          const url = URL.createObjectURL(file);
+
+          if (audio) {
+            audio.pause();
+            URL.revokeObjectURL(audio.src);
           }
+
+          audio = new Audio(url);
+          audio.volume = volumeInput.value / 100;
+          playButton.disabled = false;
+          playButton.textContent = `Play: ${file.name}`;
+          slotLabel.textContent = `F${i + 5}: ${file.name}`;
+
+          // Save the new file URL
+          savedSettings[i].fileUrl = url;
+          localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
         } catch (err) {
           console.error('Error loading saved audio:', err);
           playButton.disabled = true;
           slotLabel.textContent = `F${i + 5}: File not found`;
-          delete savedSettings[i].handle;
+          delete savedSettings[i].fileUrl;
           localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
         }
       }
@@ -321,7 +374,6 @@
         });
 
         const file = await fileHandle.getFile();
-        currentFileHandle = fileHandle;
 
         if (audio) {
           audio.pause();
@@ -342,21 +394,9 @@
         };
         localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
 
-        // Check channels
-        audio.addEventListener('loadedmetadata', () => {
-          if (audio.mozChannels <= 2) {
-            const useAllChannels = confirm('This file is mono/stereo. Play on all channels?');
-            if (useAllChannels) {
-              audio.channelCountMode = 'explicit';
-            }
-          }
-        });
-
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Error selecting file:', err);
-          alert('Error selecting file. Please try again.');
-        }
+        console.error('Error selecting file:', err);
+        alert('Error selecting file. Please try again.');
       }
     });
 
@@ -449,6 +489,7 @@
   }
 
   populateDeviceSelector();
+  checkMissingFiles();
 </script>
 
 </body>
