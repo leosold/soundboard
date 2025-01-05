@@ -74,6 +74,10 @@
       color: #333;
       height: 35px;
     }
+    .select.missing {
+      background-color: #ff4c4c;
+      color: white;
+    }
     .pause:hover, .select:hover {
       background-color: #e0e0e0;
     }
@@ -168,9 +172,8 @@
 <body>
 
 <div class="banner" id="reloadBanner">
-  Reload all audio files or reset?
-  <button id="reloadButton">Reload</button>
-  <button id="resetButton">Reset</button>
+  Some audio files are missing. Please reload them.
+  <button id="okButton">OK</button>
 </div>
 
 <div class="container" id="soundboard"></div>
@@ -190,8 +193,7 @@
   const deviceSelector = document.getElementById('deviceSelector');
   const unlockButton = document.getElementById('unlockDeviceSelector');
   const reloadBanner = document.getElementById('reloadBanner');
-  const reloadButton = document.getElementById('reloadButton');
-  const resetButton = document.getElementById('resetButton');
+  const okButton = document.getElementById('okButton');
   const savedSettings = JSON.parse(localStorage.getItem('soundboardSettings')) || {};
   const savedDevice = localStorage.getItem('selectedAudioDevice') || 'default';
 
@@ -210,29 +212,8 @@
     }
   }
 
-  reloadButton.addEventListener('click', async () => {
+  okButton.addEventListener('click', () => {
     reloadBanner.style.display = 'none';
-    for (let i = 0; i < 8; i++) {
-      if (savedSettings[i]?.handle && !savedSettings[i]?.fileUrl) {
-        try {
-          const fileHandle = savedSettings[i].handle;
-          const file = await fileHandle.getFile();
-          const url = URL.createObjectURL(file);
-
-          savedSettings[i].fileUrl = url;
-          localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
-        } catch (err) {
-          console.error('Error reloading file:', err);
-        }
-      }
-    }
-    location.reload();
-  });
-
-  resetButton.addEventListener('click', () => {
-    reloadBanner.style.display = 'none';
-    localStorage.removeItem('soundboardSettings');
-    location.reload();
   });
 
   // Handle device selector unlocking
@@ -344,6 +325,7 @@
           console.error('Error loading saved audio:', err);
           playButton.disabled = true;
           slotLabel.textContent = `F${i + 5}: File not found`;
+          selectButton.classList.add('missing');
           delete savedSettings[i].fileUrl;
           localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
         }
@@ -358,11 +340,6 @@
     }
 
     selectButton.addEventListener('click', async () => {
-      if (savedSettings[i]?.fileName) {
-        const overwrite = confirm(`Slot already has a sound: ${savedSettings[i].fileName}. Overwrite?`);
-        if (!overwrite) return;
-      }
-
       try {
         const [fileHandle] = await window.showOpenFilePicker({
           types: [{
@@ -370,7 +347,8 @@
             accept: {
               'audio/*': ['.mp3', '.wav', '.aac', '.webm']
             }
-          }]
+          }],
+          startIn: savedSettings[i]?.handle || 'music'
         });
 
         const file = await fileHandle.getFile();
@@ -385,6 +363,7 @@
         playButton.disabled = false;
         playButton.textContent = `Play: ${file.name}`;
         slotLabel.textContent = `F${i + 5}: ${file.name}`;
+        selectButton.classList.remove('missing');
 
         // Save settings with file handle
         savedSettings[i] = {
