@@ -7,109 +7,138 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
+      background-color: #1a1a1a;
       padding: 20px;
-      max-width: 1200px;
       margin: 0 auto;
+      color: #ffffff;
     }
     .container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
-      margin-bottom: 40px;
+      margin-bottom: 60px;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .slot {
-      border: 2px solid #e0e0e0;
-      padding: 20px;
-      background-color: #fff;
+      border: 1px solid #333;
+      padding: 15px;
+      background-color: #2a2a2a;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      gap: 10px;
+      border-radius: 4px;
     }
     .slot-header {
-      height: 40px;
-      margin-bottom: 15px;
+      height: 30px;
       display: flex;
       align-items: center;
     }
     .slot h3 {
       margin: 0;
       font-size: 16px;
-      color: #333;
+      color: #ffffff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .slot button {
-      display: inline-block;
-      margin: 5px 5px 0 0;
-      padding: 10px;
       border: none;
       cursor: pointer;
       font-size: 14px;
       transition: all 0.2s ease;
+      height: 40px;
+      border-radius: 4px;
     }
     .play {
-      background-color: #4caf50;
+      background-color: #2d9440; /* Ready to play - Green */
       color: white;
       font-size: 16px;
-      padding: 15px;
       width: 100%;
-      height: 60px;
-    }
-    .play:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
+	  height: 120px !important;
     }
     .play.playing {
-      background-color: #d9534f;
+      background-color: #f0c040; /* Playing - Yellow */
+    }
+    .play.paused {
+      background-color: #ff9800; /* Paused - Orange */
+    }
+    .play:disabled {
+      background-color: #4a4a4a; /* Not ready - Gray */
+      cursor: not-allowed;
     }
     .button-container {
       display: flex;
-      gap: 5px;
+      gap: 10px;
+      height: 40px;
     }
     .pause, .select {
       flex: 1;
-      background-color: #f0f0f0;
-      color: #333;
-      height: 35px;
+      background-color: #3a3a3a;
+      color: #ffffff;
     }
-    .select.missing {
-      background-color: #ff4c4c;
-      color: white;
+    .pause.paused, .pause.paused:hover {
+      background-color: #ff9800; /* Paused - Orange */
     }
     .pause:hover, .select:hover {
-      background-color: #e0e0e0;
+      background-color: #4a4a4a;
+    }
+    .select.inaccessible {
+      background-color: #ff9800;
     }
     .progress {
       width: 100%;
-      height: 8px;
-      background-color: #eee;
+      height: 12px;
+      background-color: #3a3a3a;
+      border-radius: 3px;
       overflow: hidden;
-      margin-top: 10px;
     }
     .progress-bar {
       width: 0%;
       height: 100%;
-      background-color: #4caf50;
+      background-color: #2d9440;
       transition: width 0.1s linear;
     }
     .volume {
-      margin-top: 10px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .volume label {
       font-size: 14px;
-      color: #666;
+      color: #cccccc;
     }
     .volume input {
       width: 60px;
       padding: 4px;
       font-size: 14px;
       text-align: center;
-      border: 1px solid #ddd;
+      border: 1px solid #444;
+      background-color: #3a3a3a;
+      color: #ffffff;
+      border-radius: 3px;
+    }
+    .warning-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #ff9800;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      z-index: 1000;
+      display: none;
+    }
+    .warning-banner button {
+      margin-left: 15px;
+      padding: 5px 15px;
+      background-color: white;
+      color: #ff9800;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
     }
     .output-device-menu {
       position: fixed;
@@ -117,63 +146,48 @@
       left: 0;
       right: 0;
       padding: 10px;
-      background-color: #f8f8f8;
-      border-top: 1px solid #ddd;
+      background-color: #2a2a2a;
+      border-top: 1px solid #333;
       text-align: center;
-      font-size: 14px;
     }
     .output-device-menu h3 {
       margin: 0 0 5px 0;
       font-size: 14px;
-      color: #666;
+      color: #cccccc;
     }
     .output-device-menu select {
       font-size: 14px;
       padding: 5px;
       max-width: 300px;
+      background-color: #3a3a3a;
+      color: #ffffff;
+      border: 1px solid #444;
+      border-radius: 3px;
     }
     .output-device-menu select:disabled {
       opacity: 0.7;
-    }
-    .device-selector-wrapper {
-      position: relative;
-      display: inline-block;
     }
     .unlock-button {
       font-size: 12px;
       padding: 2px 8px;
       margin-left: 10px;
-      background-color: #f0f0f0;
-      border: 1px solid #ddd;
+      background-color: #3a3a3a;
+      color: #ffffff;
+      border: 1px solid #444;
+      border-radius: 3px;
       cursor: pointer;
     }
-    .banner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background-color: #ffeb3b;
-      padding: 10px;
-      text-align: center;
-      font-size: 16px;
-      display: none;
-      z-index: 1000;
-    }
-    .banner button {
-      margin-left: 10px;
-      padding: 5px 10px;
-      border: none;
-      background-color: #4caf50;
-      color: white;
-      cursor: pointer;
+    @media (max-width: 1200px) {
+      .container {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
 <body>
-
-<div class="banner" id="reloadBanner">
-  Some audio files are missing. Please reload them.
-  <button id="okButton">OK</button>
+<div id="warningBanner" class="warning-banner">
+  Some sound files are no longer accessible. Please reselect the highlighted files.
+  <button onclick="dismissWarning()">OK</button>
 </div>
 
 <div class="container" id="soundboard"></div>
@@ -192,31 +206,28 @@
   const soundboard = document.getElementById('soundboard');
   const deviceSelector = document.getElementById('deviceSelector');
   const unlockButton = document.getElementById('unlockDeviceSelector');
-  const reloadBanner = document.getElementById('reloadBanner');
-  const okButton = document.getElementById('okButton');
+  const warningBanner = document.getElementById('warningBanner');
   const savedSettings = JSON.parse(localStorage.getItem('soundboardSettings')) || {};
   const savedDevice = localStorage.getItem('selectedAudioDevice') || 'default';
+  let inaccessibleSlots = 0;
 
-  let missingFiles = false;
-
-  // Show reload/reset banner if files are missing
-  function checkMissingFiles() {
-    for (let i = 0; i < 8; i++) {
-      if (savedSettings[i]?.handle && !savedSettings[i]?.fileUrl) {
-        missingFiles = true;
-        break;
-      }
-    }
-    if (missingFiles) {
-      reloadBanner.style.display = 'block';
-    }
+  function dismissWarning() {
+    warningBanner.style.display = 'none';
   }
 
-  okButton.addEventListener('click', () => {
-    reloadBanner.style.display = 'none';
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Handle F1-F8 keys
+    if (e.key.match(/^F[1-8]$/)) {
+      e.preventDefault(); // Prevent default browser behavior
+      const slotIndex = parseInt(e.key.substring(1)) - 1;
+      const playButton = document.querySelectorAll('.play')[slotIndex];
+      if (playButton && !playButton.disabled) {
+        playButton.click();
+      }
+    }
   });
 
-  // Handle device selector unlocking
   unlockButton.addEventListener('click', () => {
     if (deviceSelector.disabled) {
       const confirm = window.confirm('Are you sure you want to change the audio output device?');
@@ -235,31 +246,26 @@
     const slot = document.createElement('div');
     slot.classList.add('slot');
 
-    // Slot header with label
     const slotHeader = document.createElement('div');
     slotHeader.classList.add('slot-header');
     const slotLabel = document.createElement('h3');
     const savedFileName = savedSettings[i]?.fileName || 'No Sound Selected';
-    slotLabel.textContent = `F${i + 5}: ${savedFileName}`;
+    slotLabel.textContent = `F${i + 1}: ${savedFileName}`;
     slotHeader.appendChild(slotLabel);
     slot.appendChild(slotHeader);
 
-    // Play button
     const playButton = document.createElement('button');
     playButton.textContent = savedFileName === 'No Sound Selected' ? 'Play' : `Play: ${savedFileName}`;
     playButton.classList.add('play');
     playButton.disabled = !savedSettings[i]?.fileUrl;
 
-    // Button container
     const buttonContainer = document.createElement('div');
     buttonContainer.classList.add('button-container');
 
-    // Pause button
     const pauseButton = document.createElement('button');
     pauseButton.textContent = 'Pause/Continue';
     pauseButton.classList.add('pause');
 
-    // Select file button
     const selectButton = document.createElement('button');
     selectButton.textContent = 'Select Sound';
     selectButton.classList.add('select');
@@ -267,14 +273,12 @@
     buttonContainer.appendChild(pauseButton);
     buttonContainer.appendChild(selectButton);
 
-    // Progress bar
     const progress = document.createElement('div');
     progress.classList.add('progress');
     const progressBar = document.createElement('div');
     progressBar.classList.add('progress-bar');
     progress.appendChild(progressBar);
 
-    // Volume control
     const volumeControl = document.createElement('div');
     volumeControl.classList.add('volume');
     const volumeLabel = document.createElement('label');
@@ -288,23 +292,20 @@
     volumeControl.appendChild(volumeLabel);
     volumeControl.appendChild(volumeInput);
 
-    // Add elements to the slot
     slot.appendChild(playButton);
     slot.appendChild(buttonContainer);
     slot.appendChild(progress);
     slot.appendChild(volumeControl);
     soundboard.appendChild(slot);
 
-    // Audio handling
     let audio = null;
     let interval = null;
 
-    // Load saved audio if it exists
     async function loadSavedAudio() {
-      if (savedSettings[i]?.fileUrl) {
+      if (savedSettings[i]?.handle) {
         try {
-          const fileHandle = savedSettings[i].handle;
-          const file = await fileHandle.getFile();
+          await savedSettings[i].handle.requestPermission({ mode: 'read' });
+          const file = await savedSettings[i].handle.getFile();
           const url = URL.createObjectURL(file);
 
           if (audio) {
@@ -316,27 +317,25 @@
           audio.volume = volumeInput.value / 100;
           playButton.disabled = false;
           playButton.textContent = `Play: ${file.name}`;
-          slotLabel.textContent = `F${i + 5}: ${file.name}`;
+          slotLabel.textContent = `F${i + 1}: ${file.name}`;
+          selectButton.classList.remove('inaccessible');
 
-          // Save the new file URL
-          savedSettings[i].fileUrl = url;
-          localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
         } catch (err) {
-          console.error('Error loading saved audio:', err);
+          console.error('Error accessing saved file:', err);
           playButton.disabled = true;
-          slotLabel.textContent = `F${i + 5}: File not found`;
-          selectButton.classList.add('missing');
-          delete savedSettings[i].fileUrl;
-          localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
+          slotLabel.textContent = `F${i + 1}: File access needed`;
+          selectButton.classList.add('inaccessible');
+          inaccessibleSlots++;
+          
+          if (inaccessibleSlots === 1) {
+            warningBanner.style.display = 'block';
+          }
         }
       }
     }
 
-    // Initial load of saved audio
     if (savedSettings[i]?.handle) {
       loadSavedAudio();
-    } else {
-      playButton.disabled = true;
     }
 
     selectButton.addEventListener('click', async () => {
@@ -347,8 +346,7 @@
             accept: {
               'audio/*': ['.mp3', '.wav', '.aac', '.webm']
             }
-          }],
-          startIn: savedSettings[i]?.handle || 'music'
+          }]
         });
 
         const file = await fileHandle.getFile();
@@ -361,11 +359,11 @@
         const url = URL.createObjectURL(file);
         audio = new Audio(url);
         playButton.disabled = false;
+        playButton.classList.remove('paused');
         playButton.textContent = `Play: ${file.name}`;
-        slotLabel.textContent = `F${i + 5}: ${file.name}`;
-        selectButton.classList.remove('missing');
+        slotLabel.textContent = `F${i + 1}: ${file.name}`;
+        selectButton.classList.remove('inaccessible');
 
-        // Save settings with file handle
         savedSettings[i] = {
           fileName: file.name,
           handle: fileHandle,
@@ -374,8 +372,10 @@
         localStorage.setItem('soundboardSettings', JSON.stringify(savedSettings));
 
       } catch (err) {
-        console.error('Error selecting file:', err);
-        alert('Error selecting file. Please try again.');
+        if (err.name !== 'AbortError') {
+          console.error('Error selecting file:', err);
+          alert('Error selecting file. Please try again.');
+        }
       }
     });
 
@@ -385,8 +385,9 @@
         audio.currentTime = 0;
         audio.play();
         playButton.classList.add('playing');
+        playButton.classList.remove('paused');
+        pauseButton.classList.remove('paused');
         
-        // Clear any existing interval
         if (interval) {
           clearInterval(interval);
         }
@@ -397,18 +398,18 @@
             progressBar.style.width = `${progressPercentage}%`;
             
             if (audio.ended) {
-              playButton.classList.remove('playing');
+              playButton.classList.remove('playing', 'paused');
+              pauseButton.classList.remove('paused');
               clearInterval(interval);
-              // Reset progress bar
               progressBar.style.width = '0%';
             }
           }
         }, 100);
 
-        // Add ended event listener to ensure progress bar is reset
         audio.addEventListener('ended', () => {
           progressBar.style.width = '0%';
-          playButton.classList.remove('playing');
+          playButton.classList.remove('playing', 'paused');
+          pauseButton.classList.remove('paused');
           clearInterval(interval);
         });
       }
@@ -418,8 +419,14 @@
       if (audio) {
         if (!audio.paused) {
           audio.pause();
+          playButton.classList.remove('playing');
+          playButton.classList.add('paused');
+          pauseButton.classList.add('paused');
         } else {
           audio.play();
+          playButton.classList.add('playing');
+          playButton.classList.remove('paused');
+          pauseButton.classList.remove('paused');
         }
       }
     });
@@ -446,7 +453,6 @@
         deviceSelector.appendChild(option);
       });
 
-      // Restore saved device
       deviceSelector.value = savedDevice;
 
       deviceSelector.addEventListener('change', () => {
@@ -457,7 +463,6 @@
           alert(`Audio output device changed to: ${deviceSelector.options[deviceSelector.selectedIndex].textContent}`);
         }
         
-        // Auto-lock after change
         deviceSelector.disabled = true;
         unlockButton.textContent = 'Unlock';
       });
@@ -468,7 +473,6 @@
   }
 
   populateDeviceSelector();
-  checkMissingFiles();
 </script>
 
 </body>
